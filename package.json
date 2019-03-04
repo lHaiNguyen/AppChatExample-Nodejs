@@ -1,0 +1,28 @@
+{
+  "name": "practiceExample",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "gulp dev"
+  },
+  "author": "LongHai <hainguyen20998@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "babel": "^6.23.0",
+    "babel-cli": "^6.26.0",
+    "chalk": "^2.4.2",
+    "dev": "^0.1.3",
+    "ejs": "^2.6.1",
+    "express": "^4.16.4",
+    "gulp": "^4.0.0",
+    "gulp-shell": "^0.7.0",
+    "lodash": "^4.17.11",
+    "mongoose": "^5.4.17",
+    "nodemon": "^1.18.10",
+    "path": "^0.12.7",
+    "socket.io": "^2.2.0",
+    "string-builder": "^0.1.6",
+    "stringbuilder": "^0.0.11",
+    "ulp": "^1.0.1"
+  }
+}

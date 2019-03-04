@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <title>Document</title>
+    <style>
+        .card-block {
+        height: 300px;
+        overflow-y: auto;
+        padding: 12px;
+        font-size: 14px;
+        line-height: 2;
+        font-weight: 500;
+    }
+    #status {
+        color: red;
+    }
+    .wrap_headCart {
+        display: flex;
+        justify-content: flex-end;
+        padding: 5px;
+    }
+    .logOut {
+        padding-left: 30px;
+        text-align: right;
+        cursor: pointer;
+    }
+    #statusSendMessages {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+    }
+    .listRoom {
+        cursor: pointer;
+        display: block;
+        padding: 6px;
+    }
+    .listRoom:hover {
+        background-color: rgba(0,0,0,0.1);
+    }
+
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="text-center">
+            MongoChat
+
+        </h1>
+        <div id="register">
+            <input type="text" id="username" class="form-control" placeholder="Enter Name">
+        </div>
+        <div class="row" id="content">
+            <div class="col-md-3">
+                <div>
+                    <table class="table table-bordered">
+                        <thead id="listRoom">
+                            <tr>
+                                <th class="text-center">List Room</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="text-center">
+                                <td><button class=" btn btn-link" data-toggle="modal" data-target="#exampleModal">
+                                        + new room
+                                    </button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div id="status"></div>
+                <div class="" id="chat">
+                    <div class='card' style="margin-top: 5px;">
+                        <div class="wrap_headCart">
+                            <div id="currenRoom" class="text-right">Room: All</div>
+                            <div class="logOut btn-link" id="logOut">LogOut</div>
+                        </div>
+                        <span id="statusSendMessages"></span>
+                        <div id="messages" class="card-block" style="height: 300px; overflow-y: auto;">
+                        </div>
+                    </div>
+                    <br>
+                    <div>
+                        <textarea id="sendMessages" class="form-control" placeholder="Enter Message"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Room title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="roomName" class="form-control" placeholder="Enter room name...">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="btnCreateRoom" data-dismiss="modal">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script>
+        let socket = io("localhost:3000");
+
+        function dumpData(data, type = 1) {
+            let oldMessages;
+            console.log(data);
+            if (data && data.length) {
+                if (type === 1) {
+                    data.forEach(element => {
+                        const message = document.createElement('div');
+                        message.setAttribute('class', 'chat-message');
+                        message.textContent = `${element.user_name}: ${element.messages}`;
+                        messages.appendChild(message);
+                    })
+                } else {
+                    data.forEach(element => {
+                        oldMessages +=
+                            `<div class="chat-message"> <span style="font-weight: bold">${element.user_name}</span>: ${element.messages}</div>`
+                    });
+                    messages.innerHTML = oldMessages;
+                }
+            } else {
+                messages.innerHTML = `<div class="chat-message></div>`
+            }
+
+        }
+
+        if (socket) {
+            socket.on('oldMessage', function (data) {
+                dumpData(data, 2);
+            });
+        }
+        (function () {
+            $('#content').hide();
+            $('#register').show();
+            $('#logOut').hide();
+            let element = function (id) {
+                return document.getElementById(id);
+            }
+            let register = element('register')
+            let content = element('content');
+            let status = element('status');
+            let messages = element('messages');
+            let sendMessages = element('sendMessages');
+            let username = element('username');
+            let btnCreateRoom = element('btnCreateRoom');
+            let roomName = element('roomName');
+            let listRoom = element('listRoom');
+
+            let statusDefault = status.textContent;
+            let roomDefault = roomName.textContent;
+
+            let setStatus = function (s) {
+                status.textContent = s;
+                if (s !== statusDefault) {
+                    let delay = setTimeout(function () {
+                        setStatus(statusDefault)
+                    }, 4000)
+                }
+            }
+            register.addEventListener('keyup', function () {
+                if (event.keyCode === 13) {
+                    socket.emit('new-user', {
+                        username: username.value
+                    })
+                }
+            })
+            let user;
+            socket.on('server-new-user', function (data) {
+                if (data) {
+                    user = data;
+                    $('#content').show();
+                    $('#register').hide();
+                }
+            })
+            sendMessages.addEventListener('keyup', function (event) {
+                if (event.keyCode === 13 && sendMessages.value.trim().length) {
+                    socket.emit('input', {
+                        user_name: username.value,
+                        messages: sendMessages.value
+                    })
+                    sendMessages.value = '';
+                }
+            })
+            sendMessages.addEventListener('keyup', function (event) {
+                if (sendMessages.value.length > 0) {
+                    socket.emit('sending...')
+                } else {
+                    socket.emit('stop');
+                }
+            })
+
+            socket.on('output', function (data) {
+                if (data && data.length) {
+                    dumpData(data, 1);
+                }
+            })
+            socket.on('status', function (s) {
+                setStatus(s.message);
+            })
+
+            btnCreateRoom.addEventListener('click', function () {
+                $('#exampleModal').hide();
+                socket.emit('createRoom', {
+                    room_name: roomName.value
+                });
+            })
+            socket.on('listRoom', function (data) {
+                if (data && data.length) {
+                    data.forEach(item => {
+                        const room = document.createElement('tr');
+                        room.setAttribute('class', 'text-center listRoom')
+                        room.textContent = item.room_name;
+                        listRoom.appendChild(room);
+                    })
+                }
+            })
+            listRoom.addEventListener('click', function (event) {
+                if (event.target.tagName === 'TR') {
+                    $('#logOut').show()
+                    let roomSelected = event.target.textContent;
+                    socket.emit('selectRoom', roomSelected);
+                }
+            })
+            socket.on('currenRoom', function (data) {
+                document.getElementById('currenRoom').innerHTML = `Room: ${data}`;
+            })
+            document.getElementById('logOut').addEventListener('click', function (event) {
+                $('#logOut').hide();
+                socket.emit('logOut');
+            })
+            socket.on('notifi_logOut', function (data) {
+                let node = document.createElement('p');
+                let textNode = document.createTextNode(`${data} has left convertion`);
+                node.appendChild(textNode);
+                messages.appendChild(node);
+            })
+            socket.on('dashboard', function (data) {
+                document.getElementById('currenRoom').innerHTML = `Room: ${data}`;
+            })
+            socket.on('writing', function () {
+                $('#statusSendMessages').html(
+                    `<img id="wating" src="upload/lg.messenger-typing-preloader.gif" width=79>`)
+            })
+            socket.on('removeStatusSendMessages', function () {
+                $('#wating').remove()
+            })
+        })();
+    </script>
+</body>
+
+</html>
