@@ -7,6 +7,7 @@ const chatRoomModel = require('../model/room.model');
 module.exports = function connectSocket(server) {
     const client = io(server);
     client.on('connection', function (socket) {
+        console.log(socket.adapter.rooms);
         console.log(chalk.bgGreen("have a connection: " + socket.id));
         socket.currenRoom = 'all';
         socket.join('all');
